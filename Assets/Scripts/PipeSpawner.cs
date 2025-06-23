@@ -13,6 +13,12 @@ public class PipeSpawner : MonoBehaviour
     private void Start()
     {
         SpawnPipe();
+        
+        // Suscribirse a eventos de aspectos
+        if (SpawnAspect.Instance != null)
+        {
+            SpawnAspect.OnPipeSpawned += HandlePipeSpawned;
+        }
     }
 
     private void Update()
@@ -28,8 +34,39 @@ public class PipeSpawner : MonoBehaviour
     private void SpawnPipe()
     {
         Vector3 spawnpos = transform.position + new Vector3(0, Random.Range(-heightRange, heightRange));
-        GameObject pipeVariable = Instantiate(pipe, spawnpos, Quaternion.identity);
-
-        Destroy(pipeVariable, 10f);
+        
+        // Usar el aspecto de spawn si está disponible
+        if (SpawnAspect.Instance != null)
+        {
+            GameObject pipeVariable = SpawnAspect.Instance.SpawnPipe(pipe, spawnpos);
+            if (pipeVariable != null)
+            {
+                SpawnAspect.Instance.DestroyObject(pipeVariable, 10f);
+            }
+        }
+        else
+        {
+            // Mantener la lógica original como fallback
+            GameObject pipeVariable = Instantiate(pipe, spawnpos, Quaternion.identity);
+            Destroy(pipeVariable, 10f);
+        }
+    }
+    
+    private void HandlePipeSpawned(GameObject spawnedPipe)
+    {
+        // Lógica adicional cuando se spawnea una tubería
+        if (LoggingAspect.Instance != null)
+        {
+            LoggingAspect.LogSpawn("Pipe", spawnedPipe.transform.position);
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Limpiar suscripciones
+        if (SpawnAspect.Instance != null)
+        {
+            SpawnAspect.OnPipeSpawned -= HandlePipeSpawned;
+        }
     }
 }

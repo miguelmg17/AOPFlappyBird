@@ -28,19 +28,56 @@ public class GameManager : MonoBehaviour
             instance = this;
         }
         Time.timeScale = 1f;
+        
+        if (GameStateAspect.Instance != null)
+        {
+            GameStateAspect.OnGameOver += HandleGameOverFromAspect;
+        }
     }
-    public void GameOver()
+    
+    private void HandleGameOverFromAspect()
     {
         GameOverCanvas.SetActive(true);
         Time.timeScale = 0f;
     }
+    
+    public void GameOver()
+    {
+        GameOverCanvas.SetActive(true);
+        Time.timeScale = 0f;
+        
+        if (GameStateAspect.Instance != null)
+        {
+            GameStateAspect.Instance.SetGameState(GameState.GameOver);
+        }
+    }
+    
     public void RestartGame()
     {
         GameOverCanvas.SetActive(false);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        
+        if (GameStateAspect.Instance != null)
+        {
+            GameStateAspect.Instance.SetGameState(GameState.Playing);
+        }
     }
+    
     public void GoMenu()
     {
         SceneManager.LoadScene(0);
+        
+        if (GameStateAspect.Instance != null)
+        {
+            GameStateAspect.Instance.SetGameState(GameState.Menu);
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        if (GameStateAspect.Instance != null)
+        {
+            GameStateAspect.OnGameOver -= HandleGameOverFromAspect;
+        }
     }
 }
